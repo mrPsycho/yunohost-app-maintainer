@@ -2,11 +2,13 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "yunohost-app-maintainer",
   "version": "1.0.0",
-  "description": "Copilot plugin (yunohost_app_maintainer) for creating, updating, migrating, linting, testing, and publishing YunoHost application packages using Packaging v2 and Helpers v2.1.",
+  "description": "Copilot plugin for creating, updating, migrating, linting, testing, and publishing YunoHost application packages (*_ynh) using Packaging v2 and Helpers v2.1.",
   "author": {
-    "name": "YunoHost App Maintainer Contributors"
+    "name": "mrPsycho",
+    "url": "https://github.com/mrPsycho"
   },
-  "homepage": "https://doc.yunohost.org/en/dev/packaging/",
+  "homepage": "https://github.com/mrPsycho/yunohost-app-maintainer",
+  "repository": "https://github.com/mrPsycho/yunohost-app-maintainer",
   "license": "MIT",
   "keywords": [
     "yunohost",

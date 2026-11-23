@@ -1,10 +1,10 @@
-# YunoHost App Maintainer — GitHub Copilot Plugin (`yunohost_app_maintainer`)
+# YunoHost App Maintainer (`yunohost-app-maintainer`)
+
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Plugin-0098FF?logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode%3A%2F%2Fchat-plugin%2Finstall%3Fsource%3DmrPsycho%252Fyunohost-app-maintainer%26plugin%3Dyunohost-app-maintainer)
 
 A comprehensive **GitHub Copilot Agent Plugin** (conforming to the [Agent Plugins 1.0](https://agent-plugins.org/) standard + `com.github.copilot` extensions) that helps developers and maintainers **create, update, migrate, lint, test, and publish YunoHost application packages (`*_ynh`)**.
 
 Built directly from the official [YunoHost Developer & Packaging Documentation](https://doc.yunohost.org/en/dev/), [`YunoHost/example_ynh`](https://github.com/YunoHost/example_ynh), [`YunoHost/package_linter`](https://github.com/YunoHost/package_linter), [`YunoHost/package_check`](https://github.com/YunoHost/package_check), and [`YunoHost/apps`](https://github.com/YunoHost/apps) JSON schemas—targeting **Packaging v2** (`manifest.toml`) and **Helpers v2.1** (`yunohost >= 12.1.38`) with zero hallucinated helpers.
-
-> **Note on Plugin Slug**: Per the Agent Plugins 1.0 & Copilot CLI naming specification (lowercase ASCII letters, digits, and hyphens only; underscores are disallowed in `plugin.json` and `SKILL.md` IDs), the technical package identifier is **`yunohost-app-maintainer`**.
 
 ---
 
@@ -60,12 +60,14 @@ yunohost-app-maintainer/
 
 ### Option 1: Install in Visual Studio Code
 
-#### A. Install from Git Repository or Local Folder (UI)
-1. Ensure `"chat.plugins.enabled": true` is enabled in your VS Code settings.
-2. Open the **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run **`Chat: Install Plugin from Source`** *(or open **Chat: Open Customizations** -> **Plugins** -> click **`+`** next to **User** or **Workspace**)*.
-3. Enter either:
-   - Your **Git repository URL** (for example `https://github.com/<your-org>/yunohost-app-maintainer`), or
-   - The **local directory path** to this repository (for example `/home/user/ynh/skill_ynh`).
+#### A. One-Click Deep Link or UI Install
+- **Deep link**: Open `vscode://chat-plugin/install?source=mrPsycho%2Fyunohost-app-maintainer&plugin=yunohost-app-maintainer` (or click the **Install Plugin** badge at the top of this README).
+- **Command Palette**:
+  1. Ensure `"chat.plugins.enabled": true` is enabled in your VS Code settings.
+  2. Open the **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run **`Chat: Install Plugin from Source`** *(or open **Chat: Open Customizations** -> **Plugins** -> click **`+`** next to **User** or **Workspace**)*.
+  3. Enter either:
+     - GitHub repository URL: `https://github.com/mrPsycho/yunohost-app-maintainer`, or
+     - Local clone path: `/path/to/yunohost-app-maintainer`.
 
 #### B. Register a Live Local Checkout in `settings.json` (Best for Plugin Development)
 Add `chat.pluginLocations` to your VS Code User or Remote `settings.json` so edits take effect immediately without reinstalling:
@@ -74,7 +76,7 @@ Add `chat.pluginLocations` to your VS Code User or Remote `settings.json` so edi
 {
   "chat.plugins.enabled": true,
   "chat.pluginLocations": {
-    "/absolute/path/to/skill_ynh": true
+    "/path/to/yunohost-app-maintainer": true
   }
 }
 ```
@@ -83,16 +85,16 @@ Add `chat.pluginLocations` to your VS Code User or Remote `settings.json` so edi
 
 ### Option 2: Install in GitHub Copilot CLI
 
-*(Note: Plugins installed via a local marketplace load live from disk and are shared with Copilot Agent Host sessions in VS Code!)*
+*(Note: Plugins installed via a marketplace are also shared with Copilot Agent Host sessions in VS Code!)*
 
 ```bash
-# Register the plugin's marketplace and install (recommended, live-reloads on new sessions):
-copilot plugin marketplace add /path/to/skill_ynh
-copilot plugin install yunohost-app-maintainer@yunohost-plugins
+# Install from GitHub (recommended):
+copilot plugin marketplace add mrPsycho/yunohost-app-maintainer
+copilot plugin install yunohost-app-maintainer@yunohost-app-maintainer
 
-# Or register from GitHub and install:
-copilot plugin marketplace add <owner>/<repo>
-copilot plugin install yunohost-app-maintainer@yunohost-plugins
+# Or install from a local clone (live-reloads on new sessions):
+copilot plugin marketplace add /path/to/yunohost-app-maintainer
+copilot plugin install yunohost-app-maintainer@yunohost-app-maintainer
 
 # Verify installation and skills:
 copilot plugin list
@@ -102,37 +104,38 @@ copilot skill list
 When developing locally, you can also mount the plugin per session without installing:
 
 ```bash
-copilot --plugin-dir /path/to/skill_ynh
+copilot --plugin-dir /path/to/yunohost-app-maintainer
 ```
 
 To update or uninstall later:
 
 ```bash
-# Re-install local changes into cache:
-copilot plugin install /path/to/skill_ynh
+# Update from GitHub marketplace:
+copilot plugin marketplace update yunohost-app-maintainer
+copilot plugin update yunohost-app-maintainer@yunohost-app-maintainer
 
-# Uninstall by plugin manifest name:
-copilot plugin uninstall yunohost-app-maintainer
+# Uninstall:
+copilot plugin uninstall yunohost-app-maintainer@yunohost-app-maintainer
 ```
 
 ---
 
 ### Option 3: Share Across a Team / Repository (`.github/copilot/settings.json`)
 
-This repository includes `.github/plugin/marketplace.json`, so you can register it as a marketplace for any YunoHost packaging workspace:
+This repository includes `.github/plugin/marketplace.json`, so you can enable it by default in any YunoHost packaging workspace:
 
 ```json
 {
   "extraKnownMarketplaces": {
-    "yunohost-plugins": {
+    "yunohost-app-maintainer": {
       "source": {
         "source": "github",
-        "repo": "<owner>/<repo>"
+        "repo": "mrPsycho/yunohost-app-maintainer"
       }
     }
   },
   "enabledPlugins": {
-    "yunohost-app-maintainer@yunohost-plugins": true
+    "yunohost-app-maintainer@yunohost-app-maintainer": true
   }
 }
 ```
@@ -144,8 +147,9 @@ This repository includes `.github/plugin/marketplace.json`, so you can register 
 If your client only supports standalone Agent Skills (`SKILL.md`):
 
 ```bash
+git clone https://github.com/mrPsycho/yunohost-app-maintainer.git
 mkdir -p ~/.copilot/skills
-cp -r /path/to/skill_ynh/skills/* ~/.copilot/skills/
+cp -r yunohost-app-maintainer/skills/* ~/.copilot/skills/
 ```
 
 ---

@@ -1,10 +1,10 @@
 {
-  "name": "yunohost-plugins",
+  "name": "yunohost-app-maintainer",
   "owner": {
-    "name": "YunoHost App Maintainer Contributors"
+    "name": "mrPsycho"
   },
   "metadata": {
-    "description": "GitHub Copilot plugins for YunoHost application packagers and maintainers",
+    "description": "GitHub Copilot plugin for YunoHost application packagers and maintainers",
     "version": "1.0.0"
   },
   "plugins": [
@@ -13,6 +13,8 @@
       "description": "Create, update, migrate, lint, test, and publish YunoHost application packages using Packaging v2 and Helpers v2.1.",
       "version": "1.0.0",
       "source": ".",
+      "homepage": "https://github.com/mrPsycho/yunohost-app-maintainer",
+      "repository": "https://github.com/mrPsycho/yunohost-app-maintainer",
       "license": "MIT",
       "keywords": [
         "yunohost",
