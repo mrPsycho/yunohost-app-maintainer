@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "yunohost-app-maintainer",
+  "version": "1.0.0",
+  "description": "Copilot plugin (yunohost_app_maintainer) for creating, updating, migrating, linting, testing, and publishing YunoHost application packages using Packaging v2 and Helpers v2.1.",
+  "author": {
+    "name": "YunoHost App Maintainer Contributors"
+  },
+  "homepage": "https://doc.yunohost.org/en/dev/packaging/",
+  "license": "MIT",
+  "keywords": [
+    "yunohost",
+    "yunohost-app-maintainer",
+    "packaging",
+    "self-hosting",
+    "manifest-v2",
+    "helpers-v2.1",
+    "ynh",
+    "debian",
+    "ssowat",
+    "nginx"
+  ]
+}

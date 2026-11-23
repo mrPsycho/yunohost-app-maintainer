@@ -1,0 +1,26 @@
+{
+  "name": "yunohost-plugins",
+  "owner": {
+    "name": "YunoHost App Maintainer Contributors"
+  },
+  "metadata": {
+    "description": "GitHub Copilot plugins for YunoHost application packagers and maintainers",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "yunohost-app-maintainer",
+      "description": "Create, update, migrate, lint, test, and publish YunoHost application packages using Packaging v2 and Helpers v2.1.",
+      "version": "1.0.0",
+      "source": ".",
+      "license": "MIT",
+      "keywords": [
+        "yunohost",
+        "packaging",
+        "self-hosting",
+        "manifest-v2",
+        "helpers-v2.1"
+      ]
+    }
+  ]
+}

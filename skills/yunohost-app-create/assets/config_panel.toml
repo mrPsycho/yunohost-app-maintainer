@@ -1,0 +1,18 @@
+#:schema https://github.com/YunoHost/apps/raw/main/schemas/config_panel.v1.schema.json
+
+version = "1.0"
+
+[main]
+name.en = "Main configuration"
+services = ["__APP__"]
+
+    [main.general]
+    name.en = "General settings"
+    optional = false
+
+        [main.general.allow_registration]
+        ask.en = "Allow open user registration"
+        type = "boolean"
+        yes = "true"
+        no = "false"
+        bind = "ALLOW_REGISTRATION:__INSTALL_DIR__/.env"
