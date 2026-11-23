@@ -83,17 +83,20 @@ Add `chat.pluginLocations` to your VS Code User or Remote `settings.json` so edi
 
 ### Option 2: Install in GitHub Copilot CLI
 
-*(Note: Plugins installed via Copilot CLI under `~/.copilot/installed-plugins/` are also automatically discovered by VS Code!)*
+*(Note: Plugins installed via a local marketplace load live from disk and are shared with Copilot Agent Host sessions in VS Code!)*
 
 ```bash
-# Install from a local clone:
-copilot plugin install /path/to/skill_ynh
+# Register the plugin's marketplace and install (recommended, live-reloads on new sessions):
+copilot plugin marketplace add /path/to/skill_ynh
+copilot plugin install yunohost-app-maintainer@yunohost-plugins
 
-# Or install directly from GitHub:
-copilot plugin install <owner>/<repo>
+# Or register from GitHub and install:
+copilot plugin marketplace add <owner>/<repo>
+copilot plugin install yunohost-app-maintainer@yunohost-plugins
 
-# Verify installation:
+# Verify installation and skills:
 copilot plugin list
+copilot skill list
 ```
 
 When developing locally, you can also mount the plugin per session without installing:
