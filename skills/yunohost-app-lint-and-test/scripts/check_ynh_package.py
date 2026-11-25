@@ -41,6 +41,18 @@ VALID_QUESTION_TYPES = {
     "number", "range", "alert", "markdown", "file", "app",
 }
 
+ALLOWED_INSTALL_QUESTION_KEYS = {
+    "type", "default", "example", "optional", "ask",
+    "help", "choices", "pattern", "filter", "visible",
+}
+
+REDUNDANT_NGINX_PARAMS = {
+    "host", "x-real-ip", "x-scheme", "x-forwarded-for", "x-forwarded-proto",
+    "x-forwarded-host", "x-forwarded-scheme", "x-forwarded-ssl",
+    "x-forwarded-server", "upgrade", "connection",
+    "remote_user", "path_info", "script_filename",
+}
+
 VALID_SOURCE_FORMATS = {
     "tar.bz2", "tar.gz", "tar.xz", "tar.zst", "xz", "zip", "zst", "docker", "whatever",
 }
@@ -319,6 +331,14 @@ class PackageAuditor:
             for qid, qconf in install.items():
                 if not isinstance(qconf, dict):
                     continue
+                extra_qkeys = sorted(set(qconf.keys()) - ALLOWED_INSTALL_QUESTION_KEYS)
+                if extra_qkeys:
+                    self.add(
+                        "ERROR",
+                        "manifest.toml",
+                        f"in key install > {qid}: additional properties are not allowed ({extra_qkeys} unexpected; "
+                        f"manifest.v2.schema.json only allows {sorted(ALLOWED_INSTALL_QUESTION_KEYS)}).",
+                    )
                 qtype = qconf.get("type", "")
                 if qtype not in VALID_QUESTION_TYPES:
                     self.add("ERROR", "manifest.toml", f"Invalid install.{qid}.type '{qtype}'.")
@@ -475,16 +495,59 @@ class PackageAuditor:
                 if "fastcgi_pass" in text:
                     if "fastcgi_params_with_auth" not in text and "fastcgi_params_no_auth" not in text:
                         self.add("WARNING", rel, "Include 'fastcgi_params_no_auth;' or 'fastcgi_params_with_auth;' with fastcgi_pass (YunoHost >= 12.1.38).")
+                if "proxy_pass" in text or "fastcgi_pass" in text:
+                    redundant_found: list[str] = []
+                    for m in re.finditer(r"^\s*(?:proxy_set_header|fastcgi_param)\s+([a-zA-Z0-9_-]+)\s+[^;]+;", text, re.M):
+                        pname = m.group(1)
+                        if pname.lower() in REDUNDANT_NGINX_PARAMS and pname not in redundant_found:
+                            redundant_found.append(pname)
+                    if redundant_found:
+                        self.add(
+                            "INFO",
+                            rel,
+                            "Manually defining reverse-proxy/fastcgi param(s) already set by proxy_params_*/fastcgi_params_* "
+                            f"should not be necessary unless overriding the default: {', '.join(redundant_found)}.",
+                        )
 
             if cpath.suffix == ".service":
+                has_user = False
+                is_oneshot = bool(re.search(r"^\s*Type=oneshot\b", text, re.M))
                 for idx, line in enumerate(text.splitlines(), start=1):
                     s = line.strip()
                     if s.startswith("#"):
                         continue
                     if s.startswith("Environment=") and re.search(r"(pass|secret|key|token)", s, re.I):
                         self.add("ERROR", f"{rel}:{idx}", "Never place secrets/passwords/keys in world-readable systemd Environment=; use EnvironmentFile=.")
+                    if re.match(r"^User=\S+", s):
+                        has_user = True
                     if re.match(r"^User=(root|www-data)\b", s):
                         self.add("WARNING", f"{rel}:{idx}", "Run systemd service as User=__APP__ instead of root or www-data.")
+                if "[Unit]" in text and "override" not in cpath.name and not has_user:
+                    sev = "INFO" if is_oneshot else "WARNING"
+                    self.add(sev, rel, "You should specify a 'User=' directive (e.g. User=__APP__) in the systemd config!")
+                missing_hardening = [
+                    pat for pat in ("CapabilityBoundingSet", "Protect.*", "SystemCallFilter", "PrivateTmp")
+                    if not re.search(rf"^\s*{pat}=", text, re.M)
+                ]
+                if missing_hardening:
+                    self.add(
+                        "INFO",
+                        rel,
+                        f"Harden systemd security in {cpath.name} (missing {', '.join(missing_hardening)}; see example_ynh conf/systemd.service baseline).",
+                    )
+
+            for idx, line in enumerate(text.splitlines(), start=1):
+                s = line.strip()
+                if not s or s.startswith(("#", "//", ";", "/*", "*")):
+                    continue
+                if "0.0.0.0" in line or "::" in line:
+                    tokens = re.split(r"[ \t,='\"(){}\[\]]", line)
+                    if any(tok == "::" or tok.startswith("0.0.0.0") for tok in tokens):
+                        self.add(
+                            "INFO",
+                            f"{rel}:{idx}",
+                            "Binding to '0.0.0.0' or '::' can allow bypassing NGINX/SSOwat; use '127.0.0.1' or '::1' unless this port is intentionally exposed.",
+                        )
 
 
 def main() -> None:

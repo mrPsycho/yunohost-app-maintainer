@@ -17,8 +17,9 @@ Rendered to `/etc/nginx/conf.d/$domain.d/$app.conf` via `ynh_config_add_nginx`:
    - Reverse proxy with `integration.sso = false` or `"not_relevant"` -> `include proxy_params_no_auth;`
    - PHP-FPM with `integration.sso = true` -> `include fastcgi_params_with_auth;`
    - PHP-FPM with `integration.sso = false` or `"not_relevant"` -> `include fastcgi_params_no_auth;`
-2. **Do NOT duplicate headers already set in `proxy_params_*` / `fastcgi_params_*`**:
-   - Never manually set `Host`, `X-Real-IP`, `X-Scheme`, `X-Forwarded-For`, `X-Forwarded-Proto`, `X-Forwarded-Host`, `X-Forwarded-Scheme`, `X-Forwarded-Ssl`, `X-Forwarded-Server`, `Upgrade $http_upgrade`, `Connection $connection_upgrade`, `REMOTE_USER`, `PATH_INFO`, or `SCRIPT_FILENAME`.
+2. **Do NOT duplicate headers/params already set in `proxy_params_*` / `fastcgi_params_*`**:
+   - Remove redundant `proxy_set_header` or `fastcgi_param` lines for `Host`, `X-Real-IP`, `X-Scheme`, `X-Forwarded-For`, `X-Forwarded-Proto`, `X-Forwarded-Host`, `X-Forwarded-Scheme`, `X-Forwarded-Ssl`, `X-Forwarded-Server`, `Upgrade $http_upgrade`, `Connection $connection_upgrade`, `REMOTE_USER`, `PATH_INFO`, and `SCRIPT_FILENAME`.
+   - In PHP-FPM configs, `fastcgi_params_no_auth` / `fastcgi_params_with_auth` already set `SCRIPT_FILENAME $request_filename;` — delete any manual `fastcgi_param SCRIPT_FILENAME ...;` line unless you specifically need to override it to a non-default front-controller path.
 3. **Never use `add_header` inside `location` blocks** (NGINX drops parent security headers when `add_header` is used in a child block):
    - Always use `more_set_headers "Header-Name: value";` (exact quoted `"Name: value";` syntax!).
 4. **Prevent alias path-traversal vulnerability**:
@@ -57,16 +58,16 @@ location __PATH__/ {
 
 ---
 
-## 2. Systemd Service & Hardening Rules (`conf/systemd.service`)
+## 2. Systemd Service & Hardening Rules (`conf/*.service`)
 
-1. **Dedicated User**: Always run as `User=__APP__` and `Group=__APP__` (never `root` or `www-data`).
-2. **Loopback Binding**: Configure the app daemon to listen on `127.0.0.1:__PORT__` (not `0.0.0.0` or `::`), preventing direct port bypass of NGINX/SSOwat.
+1. **Dedicated User on EVERY `conf/*.service` file**: `package_linter` inspects **every** `conf/*.service` file (except `*override*`) that has `[Unit]`, including auxiliary/helper/oneshot units (e.g. `reload.service`, `worker.service`). Always specify `User=__APP__` and `Group=__APP__` (never omit `User=`, and never use `root` or `www-data`). If a helper unit needs to trigger a reload, prefer `ExecReload=` on the main unit or a scoped sudoers rule for `__APP__` rather than an unprivileged/root helper unit without `User=`.
+2. **Loopback Binding (`127.0.0.1` / `::1`)**: Configure internal app daemons behind NGINX to listen on `127.0.0.1:__PORT__` (or `::1`), **never** `0.0.0.0` or `::`, preventing direct IP/IPv6 bypass of NGINX and SSOwat. Only intentionally public non-HTTP network services (e.g. MTProto proxy, TURN/STUN, VPN, XMPP) with `exposed = "TCP"|"UDP"|"Both"` in `[resources.ports]` should bind `0.0.0.0` / `::` (for those, the `package_linter` `Info` notice can be safely ignored).
 3. **Never Put Secrets in `Environment=`**: `package_linter` flags any `Environment=` line matching `pass|secret|key` as an **Error** because unit files in `/etc/systemd/system/` are world-readable (`644`). Put secrets in `EnvironmentFile=__INSTALL_DIR__/.env` (rendered via `ynh_config_add` with `chmod 400` or `600`, `chown "$app:$app"`).
 4. **Runtime PATH for Node.js / Ruby / Go**:
    - Node.js (`[resources.nodejs]`): `Environment="PATH=__PATH_WITH_NODEJS__"` and/or `ExecStart=__NODEJS_DIR__/node ...`
    - Ruby (`[resources.ruby]`): `Environment="PATH=__PATH_WITH_RUBY__"` and/or `ExecStart=__RUBY_DIR__/bundle ...`
    - Go (`[resources.go]`): Build binary during `install`/`upgrade` with `ynh_exec_as_app go build ...` and run `__INSTALL_DIR__/myapp` directly in `ExecStart=`.
-5. **Sandboxing Baseline**: Include the standard `NoNewPrivileges=yes`, `PrivateTmp=yes`, `ProtectSystem=full` (or `strict` with `ReadWritePaths=__INSTALL_DIR__ __DATA_DIR__ /var/log/__APP__`), `CapabilityBoundingSet=~...`, and `SystemCallFilter=~...` directives from `./assets/systemd.service`. (Note: Node.js/V8/Java JIT apps only fail if `MemoryDenyWriteExecute=yes` is added—it is intentionally omitted from the standard baseline.)
+5. **Sandboxing Baseline on EVERY `conf/*.service` file**: Include the standard `example_ynh` sandboxing directives (`NoNewPrivileges=yes`, `PrivateTmp=yes`, `PrivateDevices=yes`, `ProtectSystem=full` or `strict` with `ReadWritePaths=...`, `ProtectClock=yes`, `ProtectHostname=yes`, `ProtectProc=invisible`, `ProtectControlGroups=yes`, `ProtectKernelModules=yes`, `ProtectKernelTunables=yes`, `CapabilityBoundingSet=~...`, and `SystemCallFilter=~...`) from `./assets/systemd.service` in **every** `.service` file under `conf/` (including secondary/oneshot units like `reload.service`). (Note: Node.js/V8/Java JIT apps only fail if `MemoryDenyWriteExecute=yes` is added—it is intentionally omitted from the standard baseline.)
 6. **YunoHost Service Registration**:
    Call identically in `scripts/install`, `scripts/upgrade`, and `scripts/restore`:
    ```bash

@@ -163,6 +163,9 @@ Question IDs must match `^[a-z][a-z0-9_]*$`. Answers are automatically saved to 
 ```
 
 ### Crucial `[install]` Rules
+- **Strict schema (`additionalProperties: false`)**: In `manifest.v2.schema.json`, each `[install.<id>]` table ONLY allows these **10 keys**: `type`, `default`, `example`, `optional`, `ask`, `help`, `choices`, `pattern`, `filter`, `visible`.
+  - **NEVER** put `min`, `max`, `step`, `yes`, `no`, `style`, `accept`, `redact`, `icon`, `enabled`, or `bind` in `manifest.toml` `[install.<id>]` — those cause `Error validating manifest using schema: Additional properties are not allowed`!
+  - **How to fix numeric bounds / ports**: For numeric questions (`type = "number"` / `"range"`), remove `min`/`max`/`step` from `manifest.toml` and validate the bounds inside `scripts/install` with `ynh_die` (or use `type = "string"` with `pattern.regexp` + `pattern.error`). For listening ports, prefer `[resources.ports]` (`main.default = ...`) instead of an `[install.port]` question whenever possible.
 - **NEVER set `ask`** on core-handled generic questions: `("domain", "domain")`, `("path", "path")`, `("admin", "user")`, `("password", "password")`, `("init_main_permission", "group")`. YunoHost translates them automatically (`package_linter` warns if `ask` is set!).
 - **ALWAYS set `ask.en`** on any custom question.
 - **Root-only apps**: If the upstream app cannot run under a subpath (`/subpath`), **omit `[install.path]` completely** (YunoHost sets `$path` to `"/"`).

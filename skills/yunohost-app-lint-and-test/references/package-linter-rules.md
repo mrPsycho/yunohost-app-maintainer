@@ -29,6 +29,7 @@ Sources: `YunoHost/package_linter` (`tests/test_app.py`, `test_manifest.py`, `te
 - **[Error / Warning] `description`**: Containing `"for yunohost"` -> Error; `< 5` or `> 150` chars -> Warning; starting with `id` or `name` -> Warning.
 - **[Error] `version`**: Must match lowercase `<upstream>~ynh<N>` (`^[0-9a-z]*([\.+-][0-9a-z]*)*~ynh[0-9]*$`).
 - **[Error / Warning] `[upstream]`**: Missing/invalid SPDX `license` (or `LicenseRef-*` without `license_url`); `example.com` in `website`/`demo` -> Error; `yunohost.org` in `admindoc` -> Error; `github.com` in `website` or duplicating `code` in `userdoc`/`admindoc` -> Warning.
+- **[Error] `[install.<id>]` schema (`additionalProperties: false`)**: ONLY `type`, `default`, `example`, `optional`, `ask`, `help`, `choices`, `pattern`, `filter`, `visible` are valid in `manifest.toml`. Putting `min`, `max`, `step`, `yes`, `no`, `style`, `accept`, `redact`, `icon`, `enabled`, or `bind` causes `Error validating manifest using schema: Additional properties are not allowed`. Fix: remove those keys from `manifest.toml`, validate numeric bounds in `scripts/install` (or use `pattern.regexp`), and prefer `[resources.ports]` over an `[install.port]` question.
 - **[Warning] `[install]` questions**:
   - Do **NOT** set `ask` on core questions: `("domain", "domain")`, `("path", "path")`, `("admin", "user")`, `("password", "password")`, `("init_main_permission", "group")`.
   - All custom questions **MUST** define `ask`.
@@ -76,7 +77,9 @@ Sources: `YunoHost/package_linter` (`tests/test_app.py`, `test_manifest.py`, `te
 - **[Warning] Missing `proxy_params_*` / `fastcgi_params_*` (YunoHost >= 12.1.38)**:
   - `integration.sso = true` **must** use `include proxy_params_with_auth;` or `include fastcgi_params_with_auth;`.
   - `integration.sso = false` / `"not_relevant"` **must** use `include proxy_params_no_auth;` or `include fastcgi_params_no_auth;`.
-  - Never manually duplicate headers already inside those snippets (`Host`, `X-Real-IP`, `X-Forwarded-*`, `Upgrade`, `Connection`, `REMOTE_USER`, `PATH_INFO`, `SCRIPT_FILENAME`).
+- **[Info] Redundant `proxy_set_header` / `fastcgi_param` in `conf/*nginx*.conf`**:
+  - Remove manual definitions of params already provided by `proxy_params_*` / `fastcgi_params_*`: `Host`, `X-Real-IP`, `X-Scheme`, `X-Forwarded-*`, `Upgrade`, `Connection`, `REMOTE_USER`, `PATH_INFO`, and `SCRIPT_FILENAME`. Only keep an explicit override (e.g. custom `SCRIPT_FILENAME`) if the app requires a non-default value.
 - **[Error] Secrets in systemd `Environment=`**: Any `Environment=` line matching `pass|secret|key` is an Error; move secrets to `EnvironmentFile=__INSTALL_DIR__/.env` (`chmod 400`).
-- **[Error / Warning] Service user**: Never run systemd service or PHP-FPM pool as `root` or `www-data` — always use `User=__APP__`.
-- **[Info] Binding to `0.0.0.0` / `::`**: Bind internal app daemons to `127.0.0.1`.
+- **[Warning / Info] Service user in EVERY `conf/*.service` file**: `package_linter` checks **all** `conf/*.service` files (except `*override*`) containing `[Unit]`, including helper/oneshot units like `reload.service`. Never omit `User=` and never run as `root` or `www-data` — always specify `User=__APP__` (and `Group=__APP__`). Missing `User=` is a **Warning** for regular services and **Info** for `Type=oneshot`.
+- **[Info] Systemd security hardening in EVERY `conf/*.service` file**: Include the `example_ynh` baseline (`CapabilityBoundingSet=~...`, `ProtectSystem=...`/`Protect*`, `SystemCallFilter=~...`, `PrivateTmp=yes`, `NoNewPrivileges=yes`, `PrivateDevices=yes`) in **all** `conf/*.service` files (not only `systemd.service`).
+- **[Info] Binding to `0.0.0.0` / `::` in `conf/*`**: Change internal app daemons behind NGINX to bind `127.0.0.1` (or `::1`) so NGINX/SSOwat cannot be bypassed via public IP/IPv6. For intentionally public non-HTTP services (e.g. VPN, TURN, MTProto proxy) declaring `exposed = "TCP"|"UDP"|"Both"` in `[resources.ports]`, confirm it is intentional and ignore this `Info` notice.

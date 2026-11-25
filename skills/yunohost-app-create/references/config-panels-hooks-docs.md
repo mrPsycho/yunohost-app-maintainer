@@ -52,18 +52,20 @@ Only create `scripts/config` if declarative `bind` is insufficient (`package_lin
 
 ## 2. Complete YunoHost Form Option Types (`forms.mdx`)
 
-Used in `[install.<id>]` (`manifest.toml`) and `[panel.section.<id>]` (`config_panel.toml`):
+Used in `[install.<id>]` (`manifest.toml`) and `[panel.section.<id>]` (`config_panel.toml`).
+
+> **Schema warning (`manifest.toml` vs `config_panel.toml`)**: `manifest.v2.schema.json` enforces `additionalProperties: false` on `[install.<id>]` and ONLY allows: `type`, `default`, `example`, `optional`, `ask`, `help`, `choices`, `pattern`, `filter`, `visible`. Properties marked **`config_panel.toml` only** below (`min`, `max`, `step`, `yes`, `no`, `style`, `accept`, `redact`, `icon`, `enabled`, `bind`) MUST NOT be used in `manifest.toml` or schema validation will fail!
 
 | `type` | Specific Properties & Notes |
 |---|---|
-| `string` | Single-line text; supports `pattern` (`pattern.regexp = '...'`, `pattern.error = "..."`), `example`, `redact` |
+| `string` | Single-line text; supports `pattern` (`pattern.regexp = '...'`, `pattern.error = "..."`), `example`; `redact` (`config_panel.toml` only) |
 | `text` | Multi-line textarea; supports `pattern` |
-| `password` | Enforces password policy (>= 8 chars); `redact` forced `true`; `example` **forbidden**; not saved to `settings.yml` on install |
-| `boolean` | `default` must be boolean `true`/`false` in `manifest.toml`; in `config_panel.toml` supports `yes = "true"` / `no = "false"` |
-| `number` | Integer; supports `min`, `max`, `step` |
-| `range` | Slider integer; supports `min`, `max`, `step` |
+| `password` | Enforces password policy (>= 8 chars); `redact` forced `true` (`config_panel.toml` only); `example` **forbidden**; not saved to `settings.yml` on install |
+| `boolean` | `default` must be boolean `true`/`false` in `manifest.toml`; `yes = "true"` / `no = "false"` (`config_panel.toml` only) |
+| `number` | Integer; `min`, `max`, `step` are **`config_panel.toml` only** (in `manifest.toml`, omit `min`/`max`/`step` and validate bounds in `scripts/install`) |
+| `range` | Slider integer; `min`, `max`, `step` are **`config_panel.toml` only** (omit in `manifest.toml`) |
 | `select` | Single choice; `choices = ["a", "b"]` or `choices.key_a = "Label A"` (keys `[a-zA-Z0-9_]+`, no `-`!) |
-| `tags` | Multi-value comma-separated output `"a,b"`; optional `choices`, `pattern`, `icon` |
+| `tags` | Multi-value comma-separated output `"a,b"`; optional `choices`, `pattern`; `icon` (`config_panel.toml` only) |
 | `domain` | Registered YunoHost domain selector (do not set `default` or `ask` on `[install.domain]`) |
 | `path` | URL path `/...` (e.g. `default = "/myapp"`) |
 | `user` | Existing YunoHost user selector (do not set `default` or `ask` on `[install.admin]`) |
@@ -74,8 +76,8 @@ Used in `[install.<id>]` (`manifest.toml`) and `[panel.section.<id>]` (`config_p
 | `date` | ISO `"YYYY-MM-DD"` |
 | `time` | 24h `"HH:MM"` |
 | `color` | Hex color `"#2B748B"` |
-| `file` | File upload / path; `accept = [".png", ".conf"]` |
-| `alert` | Readonly banner; `style = "info" \| "success" \| "warning" \| "danger"` (in `config_panel.v1.schema.json`: `"info"`, `"danger"`, `"success"`), `ask` supports Markdown |
+| `file` | File upload / path; `accept = [".png", ".conf"]` (`config_panel.toml` only) |
+| `alert` | Readonly banner; `style = "info" \| "success" \| "warning" \| "danger"` (`config_panel.toml` only; in `config_panel.v1.schema.json`: `"info"`, `"danger"`, `"success"`), `ask` supports Markdown |
 | `markdown` | Readonly Markdown text block in `ask` |
 | `button` | **Config panels only**: triggers `run__<id>()` in `scripts/config`; `style`, `enabled` (`bool` or `JSExpression`), `icon` |
 
