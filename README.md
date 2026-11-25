@@ -1,6 +1,6 @@
 # YunoHost App Maintainer (`yunohost-app-maintainer`)
 
-[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Plugin-0098FF?logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode%3A%2F%2Fchat-plugin%2Finstall%3Fsource%3DmrPsycho%252Fyunohost-app-maintainer%26plugin%3Dyunohost-app-maintainer)
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Plugin-0098FF?logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode%3A%2F%2Fchat-plugin%2Finstall&source=mrPsycho%2Fyunohost-app-maintainer&plugin=yunohost-app-maintainer)
 
 A comprehensive **GitHub Copilot Agent Plugin** (conforming to the [Agent Plugins 1.0](https://agent-plugins.org/) standard + `com.github.copilot` extensions) that helps developers and maintainers **create, update, migrate, lint, test, and publish YunoHost application packages (`*_ynh`)**.
 
